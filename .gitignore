@@ -1,0 +1,27 @@
+﻿
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Configuración local de Gradle
+/gradle/gradle-daemon-jvm.properties
+
+# Configuración local de Android
+local.properties
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+
+# Archivos generados de Android y C++
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+.kotlin/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
