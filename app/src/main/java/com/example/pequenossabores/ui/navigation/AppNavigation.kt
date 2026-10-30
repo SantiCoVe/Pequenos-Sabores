@@ -1,7 +1,6 @@
 package com.example.pequenossabores.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -11,6 +10,7 @@ import com.example.pequenossabores.ui.components.Tab
 import com.example.pequenossabores.ui.screens.*
 
 sealed class Ruta(val ruta: String) {
+    data object Splash : Ruta("splash")
     data object Bienvenida : Ruta("bienvenida")
     data object Registro : Ruta("registro/{login}") {
         fun conModo(login: Boolean) = "registro/$login"
@@ -34,25 +34,24 @@ fun AppNavigation() {
     val nav = rememberNavController()
 
     // Con sesión y perfil completo -> Inicio; con sesión sin perfil -> Perfil; sin sesión -> Bienvenida
-    val destinoInicial = remember {
-        val sesion = SesionPreferences(context)
-        when {
-            !sesion.haySesion() -> Ruta.Bienvenida.ruta
-            sesion.perfilCompleto() -> Ruta.Inicio.ruta
-            else -> Ruta.Perfil.conModo(true)
-        }
-    }
+    val destinoInicial = Ruta.Splash.ruta
 
     val irATab: (Tab) -> Unit = { tab ->
-        when (tab) {
-            Tab.INICIO -> nav.popBackStack(Ruta.Inicio.ruta, false)
-            Tab.PLAN -> nav.navigate(Ruta.Plan.ruta) {
-                popUpTo(Ruta.Inicio.ruta); launchSingleTop = true
+        val destino = when (tab) {
+            Tab.INICIO -> Ruta.Inicio.ruta
+            Tab.PLAN -> Ruta.Plan.ruta
+            Tab.PERFIL -> Ruta.Perfil.conModo(false)
+            Tab.PEQUECHEF -> null // Pendiente de implementar
+        }
+
+        if (destino != null) {
+            nav.navigate(destino) {
+                popUpTo(nav.graph.startDestinationId) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
             }
-            Tab.PERFIL -> nav.navigate(Ruta.Perfil.conModo(false)) {
-                popUpTo(Ruta.Inicio.ruta); launchSingleTop = true
-            }
-            Tab.PEQUECHEF -> { /* TODO pantalla del asistente */ }
         }
     }
 
@@ -61,7 +60,34 @@ fun AppNavigation() {
         nav.navigate(Ruta.Bienvenida.ruta) { popUpTo(nav.graph.id) { inclusive = true } }
     }
 
-    NavHost(navController = nav, startDestination = destinoInicial) {
+    NavHost(
+        navController = nav, startDestination = destinoInicial
+    ) {
+        composable(Ruta.Splash.ruta) {
+            SplashScreen(
+                onFinalizado = {
+                    val sesion = SesionPreferences(context)
+
+                    val destino = when {
+                        !sesion.haySesion() ->
+                            Ruta.Bienvenida.ruta
+
+                        sesion.perfilCompleto() ->
+                            Ruta.Inicio.ruta
+
+                        else ->
+                            Ruta.Perfil.conModo(true)
+                    }
+
+                    nav.navigate(destino) {
+                        popUpTo(Ruta.Splash.ruta) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
 
         composable(Ruta.Bienvenida.ruta) {
             PantallaBienvenida(

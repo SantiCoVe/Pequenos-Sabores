@@ -79,34 +79,137 @@ fun EncabezadoDetalle(titulo: String, onAtras: () -> Unit) {
     }
 }
 
+
 @Composable
 fun BarraInferior(seleccionada: Tab, onTab: (Tab) -> Unit) {
-    Box(Modifier.fillMaxWidth().background(Color.White).navigationBarsPadding()) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .navigationBarsPadding()
+    ) {
         Row(
-            Modifier.fillMaxWidth().padding(vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.Bottom
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.Bottom
         ) {
-            ItemBarra("Inicio", Icons.Filled.Home, seleccionada == Tab.INICIO) { onTab(Tab.INICIO) }
-            ItemBarra("Plan", Icons.Filled.DateRange, seleccionada == Tab.PLAN) { onTab(Tab.PLAN) }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.offset(y = (-18).dp).clickable { onTab(Tab.PEQUECHEF) }
+            // Inicio
+            ItemBarra(
+                texto = "Inicio",
+                icono = Icons.Filled.Home,
+                activo = seleccionada == Tab.INICIO,
+                esPequeChef = false
             ) {
-                Box(Modifier.size(64.dp).shadow(8.dp, CircleShape).clip(CircleShape).background(Naranja), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Face, null, tint = Color.White, modifier = Modifier.size(30.dp))
-                }
-                Text("PequeChef", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Marron)
+                onTab(Tab.INICIO)
             }
-            ItemBarra("Perfil", Icons.Filled.Person, seleccionada == Tab.PERFIL) { onTab(Tab.PERFIL) }
+
+            // Plan
+            ItemBarra(
+                texto = "Plan",
+                icono = Icons.Filled.DateRange,
+                activo = seleccionada == Tab.PLAN,
+                esPequeChef = false
+            ) {
+                onTab(Tab.PLAN)
+            }
+
+            // PequeChef
+            ItemBarra(
+                texto = "PequeChef",
+                icono = Icons.Filled.Face,
+                activo = seleccionada == Tab.PEQUECHEF,
+                esPequeChef = false
+            ) {
+                onTab(Tab.PEQUECHEF)
+            }
+
+            // Perfil
+            ItemBarra(
+                texto = "Perfil",
+                icono = Icons.Filled.Person,
+                activo = seleccionada == Tab.PERFIL,
+                esPequeChef = false
+            ) {
+                onTab(Tab.PERFIL)
+            }
         }
     }
 }
 
 @Composable
-private fun ItemBarra(texto: String, icono: ImageVector, activo: Boolean, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick).padding(4.dp)) {
-        Icon(icono, null, tint = if (activo) Marron else GrisTexto)
-        Text(texto, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (activo) Marron else GrisTexto)
+private fun ItemBarra(
+    texto: String,
+    icono: ImageVector,
+    activo: Boolean,
+    esPequeChef: Boolean = false,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .height(80.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        // El círculo grande se dibuja alrededor del elemento activo.
+        Box(
+            modifier = Modifier
+                .size(
+                    if (activo && esPequeChef) 64.dp
+                    else if (activo) 48.dp
+                    else 40.dp
+                )
+                .shadow(
+                    elevation = if (activo) 8.dp else 0.dp,
+                    shape = CircleShape
+                )
+                .clip(CircleShape)
+                .background(
+                    when {
+                        activo -> Naranja
+                        esPequeChef -> Naranja.copy(alpha = 0.18f)
+                        else -> Color.Transparent
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = texto,
+                tint = when {
+                    activo -> Color.White
+                    esPequeChef -> Naranja
+                    else -> GrisTexto
+                },
+                modifier = Modifier.size(
+                    if (activo && esPequeChef) 30.dp else 24.dp
+                )
+            )
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = texto,
+            fontSize = 11.sp,
+            fontWeight = if (activo) FontWeight.ExtraBold else FontWeight.Bold,
+            color = if (activo) Marron else GrisTexto
+        )
+
+        // Indicador inferior de la pestaña activa.
+        Box(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .width(18.dp)
+                .height(3.dp)
+                .clip(CircleShape)
+                .background(
+                    if (activo) Naranja else Color.Transparent
+                )
+        )
     }
 }
 
