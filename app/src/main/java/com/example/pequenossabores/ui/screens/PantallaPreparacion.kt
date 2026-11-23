@@ -35,7 +35,12 @@ fun PantallaPreparacion(
     onFinalizar: () -> Unit,
     vm: PreparacionViewModel = viewModel()
 ) {
-    val r = remember(recetaId) { RecetasData.porId(recetaId) }
+    LaunchedEffect(recetaId) { vm.cargar(recetaId) }
+    val r = vm.receta?.takeIf { it.id == recetaId }
+    if (r == null) {
+        EstadoReceta(error = vm.errorCarga, onAtras = onAtras)
+        return
+    }
     val total = r.pasos.size
     val i = vm.pasoActual
     val paso = r.pasos[i]
@@ -107,12 +112,12 @@ fun PantallaPreparacion(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Pildora("🍳 Paso en curso", Naranja, Color.White)
-                        Pildora("⏱️ ~${paso.minutos} min", Durazno, Marron)
+                        if (paso.minutos > 0) Pildora("⏱ ~${paso.minutos} min", Durazno, Marron)
                     }
                     Text("Paso ${i + 1}: ${paso.titulo}", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Navy)
 
                     Box(Modifier.fillMaxWidth().height(180.dp)) {
-                        FotoPlaceholder(r.emoji, Modifier.fillMaxSize(), tamano = 72)
+                        FotoPlaceholder(r.emoji, Modifier.fillMaxSize(), tamano = 72, url = r.imagenUrl)
                         if (paso.nota.isNotBlank()) {
                             Pildora("☝️ ${paso.nota}", Color.White.copy(alpha = .9f), Navy,
                                 Modifier.align(Alignment.BottomStart).padding(10.dp))

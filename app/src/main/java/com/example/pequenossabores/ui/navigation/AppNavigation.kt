@@ -20,6 +20,8 @@ sealed class Ruta(val ruta: String) {
     }
     data object Inicio : Ruta("inicio")
     data object Plan : Ruta("plan")
+    data object PequeChef : Ruta("pequechef")
+    data object Compras : Ruta("compras")
     data object Receta : Ruta("receta/{id}") {
         fun conId(id: Int) = "receta/$id"
     }
@@ -41,7 +43,7 @@ fun AppNavigation() {
             Tab.INICIO -> Ruta.Inicio.ruta
             Tab.PLAN -> Ruta.Plan.ruta
             Tab.PERFIL -> Ruta.Perfil.conModo(false)
-            Tab.PEQUECHEF -> null // Pendiente de implementar
+            Tab.PEQUECHEF -> Ruta.PequeChef.ruta
         }
 
         if (destino != null) {
@@ -128,6 +130,7 @@ fun AppNavigation() {
             PantallaInicio(
                 onTab = irATab,
                 onVerReceta = { nav.navigate(Ruta.Receta.conId(it)) },
+                onIrACompras = { nav.navigate(Ruta.Compras.ruta) { launchSingleTop = true } },
                 onCerrarSesion = cerrarSesion
             )
         }
@@ -136,20 +139,17 @@ fun AppNavigation() {
             PantallaPlan(
                 onTab = irATab,
                 onVerReceta = { nav.navigate(Ruta.Receta.conId(it)) },
+                onIrACompras = { nav.navigate(Ruta.Compras.ruta) { launchSingleTop = true } },
                 onCerrarSesion = cerrarSesion
             )
         }
 
-        // composable(
-        //    route = Ruta.Receta.ruta,
-        //    arguments = listOf(navArgument("id") { type = NavType.IntType })
-        // ) { entrada ->
-        //    PantallaReceta(
-        //        recetaId = entrada.arguments?.getInt("id") ?: 1,
-        //        onAtras = { nav.popBackStack() },
-        //        onIniciar = { nav.navigate(Ruta.Preparacion.conId(it)) }
-        //    )
-        // }
+        composable(Ruta.Compras.ruta) {
+            PantallaCompras(
+                onTab = irATab,
+                onCerrarSesion = cerrarSesion
+            )
+        }
 
         composable(
             route = Ruta.Preparacion.ruta,

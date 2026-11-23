@@ -15,7 +15,7 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "pequenos_sabores_db"
             )
-                .fallbackToDestructiveMigration() // al subir de versión recrea las tablas (solo para desarrollo)
+                .fallbackToDestructiveMigration()
                 .build()
             INSTANCE = instance
             instance

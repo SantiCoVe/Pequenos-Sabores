@@ -17,20 +17,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pequenossabores.data.model.DiaPlan
 import com.example.pequenossabores.ui.components.*
 import com.example.pequenossabores.ui.theme.*
 import com.example.pequenossabores.viewmodel.PlanViewModel
+import com.example.pequenossabores.data.model.DiaPlan
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.pequenossabores.data.model.datosRapidos
 
 @Composable
 fun PantallaPlan(
     onTab: (Tab) -> Unit,
     onVerReceta: (Int) -> Unit,
+    onIrACompras: () -> Unit,
     onCerrarSesion: () -> Unit,
     vm: PlanViewModel = viewModel()
 ) {
     val peque by vm.peque.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val semana = vm.semana
+
+    // Mientras llegan las recetas de la API
+    if (vm.cargando || semana.isEmpty()) {
+        Scaffold(
+            containerColor = Fondo,
+            topBar = { EncabezadoApp("Plan", onCerrarSesion) },
+            bottomBar = { BarraInferior(Tab.PLAN, onTab) }
+        ) { pad -> CargandoPantalla("Armando el plan semanal…", Modifier.padding(pad)) }
+        return
+    }
+
     val sel = vm.diaSeleccionado
     val nombre = peque?.nombre ?: "tu peque"
 
@@ -73,23 +89,7 @@ fun PantallaPlan(
             }
 
             // Selector de días
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                semana.forEachIndexed { i, d ->
-                    val activo = i == sel
-                    Column(
-                        Modifier.width(54.dp).clip(RoundedCornerShape(18.dp))
-                            .background(if (activo) Marron else Color.White)
-                            .clickable { vm.seleccionarDia(i) }.padding(vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(d.abrev, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                            color = if (activo) Color.White.copy(alpha = .8f) else GrisTexto)
-                        Text("${d.numero}", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold,
-                            color = if (activo) Color.White else Navy)
-                        Box(Modifier.size(5.dp).clip(CircleShape).background(if (activo) Color.White else Color.Transparent))
-                    }
-                }
-            }
+            vm.mensaje?.let { AvisoInfo("⚠ $it") }
 
             // Día seleccionado (expandido) y luego los demás días
             TarjetaDiaExpandida(semana[sel], esHoy = sel == 0, onVerReceta = onVerReceta)
@@ -98,7 +98,7 @@ fun PantallaPlan(
             }
 
             // Lista de compras
-            val totalIngredientes = semana.sumOf { d -> d.recetas.sumOf { it.ingredientes.size } }
+            val totalIngredientes = vm.totalIngredientes
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color.White).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -110,10 +110,19 @@ fun PantallaPlan(
                     Text("Organizados por pasillo", fontSize = 12.sp, color = GrisTexto)
                 }
                 Button(
-                    onClick = { /* TODO lista de compras */ },
+                    onClick = {
+                        vm.generarLista(
+                            onListo = onIrACompras,
+                            onError = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+                        )
+                    },
+                    enabled = !vm.generando,
                     colors = ButtonDefaults.buttonColors(containerColor = Marron),
                     shape = RoundedCornerShape(20.dp)
-                ) { Text("🛒 Generar lista", fontWeight = FontWeight.Bold, color = Color.White) }
+                ) {
+                    Text(if (vm.generando) "Enviando…" else "🛒 Generar lista",
+                        fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
             Spacer(Modifier.height(8.dp))
         }
@@ -143,12 +152,12 @@ private fun TarjetaDiaExpandida(dia: DiaPlan, esHoy: Boolean, onVerReceta: (Int)
                         Text("${r.titulo} ${r.emoji}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Navy)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "⏱️ ${r.minutos} min   🔥 ${r.kcal} kcal" + if (r.distintivo.isNotBlank()) "   ${r.distintivo}" else "",
+                            r.datosRapidos + if (r.datosCompletos && r.distintivo.isNotBlank()) "   ${r.distintivo}" else "",
                             fontSize = 12.sp, color = GrisTexto
                         )
                     }
                     Spacer(Modifier.width(10.dp))
-                    FotoPlaceholder(r.emoji, Modifier.size(72.dp))
+                    FotoPlaceholder(r.emoji, Modifier.size(72.dp), url = r.imagenUrl)
                 }
             }
 
@@ -188,10 +197,10 @@ private fun TarjetaDiaCompacta(dia: DiaPlan, onVerReceta: (Int) -> Unit) {
                     Text("${r.titulo} ${r.emoji}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Navy, maxLines = 2)
                     Text(r.resumen, fontSize = 12.sp, color = GrisTexto, maxLines = 2)
                     Spacer(Modifier.height(4.dp))
-                    Text("⏱️ ${r.minutos} min   🔥 ${r.kcal} kcal", fontSize = 12.sp, color = GrisTexto)
+                    Text(r.datosRapidos, fontSize = 12.sp, color = GrisTexto)
                 }
                 Spacer(Modifier.width(10.dp))
-                FotoPlaceholder(r.emoji, Modifier.size(72.dp))
+                FotoPlaceholder(r.emoji, Modifier.size(72.dp), url = r.imagenUrl)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

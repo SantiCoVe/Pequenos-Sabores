@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pequenossabores.ui.theme.*
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 enum class Tab { INICIO, PLAN, PEQUECHEF, PERFIL }
 
@@ -259,10 +261,18 @@ fun Pildora(texto: String, fondo: Color, colorTexto: Color, modifier: Modifier =
     )
 }
 
-/** Reemplaza por Image(painterResource(R.drawable.tu_foto), ...) cuando tengas las imágenes. */
+/** Muestra la foto de la URL (Coil); mientras carga o si no hay, se ve el emoji. */
 @Composable
-fun FotoPlaceholder(emoji: String, modifier: Modifier = Modifier, tamano: Int = 32) {
+fun FotoPlaceholder(emoji: String, modifier: Modifier = Modifier, tamano: Int = 32, url: String? = null) {
     Box(modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFFF1E3D3)), contentAlignment = Alignment.Center) {
         Text(emoji, fontSize = tamano.sp)
+        if (!url.isNullOrBlank()) {
+            AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

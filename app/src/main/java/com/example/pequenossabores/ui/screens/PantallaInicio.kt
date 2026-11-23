@@ -26,6 +26,7 @@ import com.example.pequenossabores.viewmodel.InicioViewModel
 fun PantallaInicio(
     onTab: (Tab) -> Unit,
     onVerReceta: (Int) -> Unit,
+    onIrACompras: () -> Unit,
     onCerrarSesion: () -> Unit,
     vm: InicioViewModel = viewModel()
 ) {
@@ -112,7 +113,8 @@ fun PantallaInicio(
                     Modifier.weight(1f).clickable { onTab(Tab.PEQUECHEF) })
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TarjetaAcceso("Lista de compras", "Ingredientes listos", Icons.Filled.ShoppingCart, Color(0xFFFFD58A), Marron, Modifier.weight(1f))
+                TarjetaAcceso("Lista de compras", "Ingredientes listos", Icons.Filled.ShoppingCart, Color(0xFFFFD58A), Marron,
+                    Modifier.weight(1f).clickable { onIrACompras() })
                 TarjetaAcceso("Favoritos", "Platos preferidos", Icons.Filled.Star, VerdeClaro, Color(0xFF065F46), Modifier.weight(1f))
             }
 

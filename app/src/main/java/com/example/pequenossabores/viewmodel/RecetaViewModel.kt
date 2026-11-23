@@ -7,7 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pequenossabores.data.model.PequeEntity
+import com.example.pequenossabores.data.model.Receta
 import com.example.pequenossabores.data.repository.PequenosSaboresRepository
+import com.example.pequenossabores.data.repository.RecetasRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -22,9 +24,22 @@ class RecetaViewModel(application: Application) : AndroidViewModel(application) 
         .map { it.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    /** Ingredientes marcados en la lista (índices). */
+    var receta by mutableStateOf<Receta?>(null)
+        private set
+    var errorCarga by mutableStateOf(false)
+        private set
+
     var marcados by mutableStateOf(setOf<Int>())
         private set
+
+    fun cargar(id: Int) {
+        if (receta?.id == id) return
+        viewModelScope.launch {
+            errorCarga = false
+            receta = RecetasRepository.obtenerReceta(id)
+            if (receta == null) errorCarga = true
+        }
+    }
 
     fun alternarMarcado(indice: Int) {
         marcados = if (indice in marcados) marcados - indice else marcados + indice
