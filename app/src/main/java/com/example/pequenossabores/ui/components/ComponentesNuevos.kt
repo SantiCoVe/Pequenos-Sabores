@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pequenossabores.ui.theme.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
+import com.example.pequenossabores.R
 
 enum class Tab { INICIO, PLAN, PEQUECHEF, PERFIL }
 
@@ -35,7 +37,22 @@ fun EncabezadoApp(subtitulo: String, onCerrarSesion: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(NaranjaClaro), contentAlignment = Alignment.Center) { Text("👨‍🍳") }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(NaranjaClaro),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logopequenossabores),
+                contentDescription = "Logo de Pequeños Sabores",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(3.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text("Pequeños Sabores", color = Marron, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)

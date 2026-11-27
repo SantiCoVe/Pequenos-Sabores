@@ -54,6 +54,7 @@ fun PantallaReceta(
     recetaId: Int,
     onAtras: () -> Unit,
     onIniciar: (Int) -> Unit,
+    onPreguntar: () -> Unit,
     vm: RecetaViewModel = viewModel()
 ) {
     LaunchedEffect(recetaId) { vm.cargar(recetaId) }
@@ -198,7 +199,13 @@ fun PantallaReceta(
                 colors = ButtonDefaults.buttonColors(containerColor = Naranja)
             ) { Text("👨‍🍳 Iniciar preparación paso a paso", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White) }
 
-            BotonSuave("🤖 Preguntar a PequeChef", fondo = Color(0xFFFFE2B8), colorTexto = Marron) { /* TODO asistente */ }
+            BotonSuave(
+                "🤖 Preguntar a PequeChef",
+                fondo = Color(0xFFFFE2B8),
+                colorTexto = Marron
+            ) {
+                onPreguntar()
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 BotonBlanco(if (esFavorito) "★ En favoritos" else "☆ Guardar favoritos", Modifier.weight(1f)) {

@@ -33,7 +33,10 @@ data class AuthUiState(
 
     val formularioValido: Boolean get() =
         if (modoLogin) correo.contains("@") && contrasena.isNotBlank()
-        else nombre.isNotBlank() && correo.contains("@") && contrasena.length >= 6 && aceptaTerminos
+        else nombre.isNotBlank() &&
+                correo.contains("@") &&
+                contrasena.length >= 8 &&
+                aceptaTerminos
 }
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -68,8 +71,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     cargando = false,
                     error = when (resultado) {
                         ResultadoAuth.OK -> null
-                        ResultadoAuth.CORREO_EXISTENTE -> "Ese correo ya está registrado. Inicia sesión."
-                        ResultadoAuth.CREDENCIALES_INVALIDAS -> "Correo o contraseña incorrectos."
+
+                        ResultadoAuth.CORREO_EXISTENTE ->
+                            "Ese correo ya está registrado. Inicia sesión."
+
+                        ResultadoAuth.CREDENCIALES_INVALIDAS ->
+                            "Correo o contraseña incorrectos."
+
+                        ResultadoAuth.ERROR_SERVIDOR ->
+                            "No fue posible conectar con el servidor. Verifica Apache, MySQL y tu conexión."
                     }
                 )
             }

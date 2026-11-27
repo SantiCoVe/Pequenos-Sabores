@@ -86,6 +86,11 @@ class PlanViewModel(application: Application) : AndroidViewModel(application) {
                 if (compras.agregarLote(sesion.correoActivo().orEmpty(), items)) onListo()
                 else onError("El servidor no pudo guardar la lista")
             } catch (e: Exception) {
+                android.util.Log.e(
+                    "ListaCompras",
+                    "Error al registrar la lista de compras",
+                    e
+                )
                 onError("Error de conexión con el servidor")
             }
             generando = false

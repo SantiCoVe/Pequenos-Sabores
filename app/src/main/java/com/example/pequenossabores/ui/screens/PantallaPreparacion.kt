@@ -33,6 +33,7 @@ fun PantallaPreparacion(
     recetaId: Int,
     onAtras: () -> Unit,
     onFinalizar: () -> Unit,
+    onPreguntar: () -> Unit,
     vm: PreparacionViewModel = viewModel()
 ) {
     LaunchedEffect(recetaId) { vm.cargar(recetaId) }
@@ -162,10 +163,11 @@ fun PantallaPreparacion(
 
             // Asistente manos libres
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
                     .background(Brush.horizontalGradient(listOf(Ambar, Marron)))
-                    .clickable { /* TODO asistente por voz */ }.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .clickable { onPreguntar() }
+                    .padding(16.dp),
             ) {
                 Box(Modifier.size(44.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) { Text("🤖") }
                 Spacer(Modifier.width(12.dp))
