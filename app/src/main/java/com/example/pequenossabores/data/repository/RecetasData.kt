@@ -171,7 +171,7 @@ object RecetasData {
     fun porId(id: Int): Receta = recetas.first { it.id == id }
 
     /** Lunes con 2 comidas y el resto de la semana con 1 por día. */
-    fun armarSemana(orden: List<Int>): List<DiaPlan> {
+    fun armarSemana(recetas: List<Receta>): List<DiaPlan> {
         val dias = listOf(
             "LUN" to "Lunes", "MAR" to "Martes", "MIÉ" to "Miércoles", "JUE" to "Jueves",
             "VIE" to "Viernes", "SÁB" to "Sábado", "DOM" to "Domingo"
@@ -179,7 +179,7 @@ object RecetasData {
         val porDia = listOf(2, 1, 1, 1, 1, 1, 1)
         var i = 0
         return dias.mapIndexed { idx, (abrev, nombre) ->
-            val recetasDia = List(porDia[idx]) { porId(orden[i++]) }
+            val recetasDia = List(porDia[idx]) { recetas[i++] }
             DiaPlan(abrev, nombre, 18 + idx, recetasDia)
         }
     }

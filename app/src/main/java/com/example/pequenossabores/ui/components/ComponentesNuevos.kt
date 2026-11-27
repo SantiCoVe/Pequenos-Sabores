@@ -20,6 +20,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pequenossabores.ui.theme.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import com.example.pequenossabores.R
 
 enum class Tab { INICIO, PLAN, PEQUECHEF, PERFIL }
 
@@ -33,7 +37,22 @@ fun EncabezadoApp(subtitulo: String, onCerrarSesion: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(NaranjaClaro), contentAlignment = Alignment.Center) { Text("👨‍🍳") }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(NaranjaClaro),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logopequenossabores),
+                contentDescription = "Logo de Pequeños Sabores",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(3.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text("Pequeños Sabores", color = Marron, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
@@ -259,10 +278,18 @@ fun Pildora(texto: String, fondo: Color, colorTexto: Color, modifier: Modifier =
     )
 }
 
-/** Reemplaza por Image(painterResource(R.drawable.tu_foto), ...) cuando tengas las imágenes. */
+/** Muestra la foto de la URL (Coil); mientras carga o si no hay, se ve el emoji. */
 @Composable
-fun FotoPlaceholder(emoji: String, modifier: Modifier = Modifier, tamano: Int = 32) {
+fun FotoPlaceholder(emoji: String, modifier: Modifier = Modifier, tamano: Int = 32, url: String? = null) {
     Box(modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFFF1E3D3)), contentAlignment = Alignment.Center) {
         Text(emoji, fontSize = tamano.sp)
+        if (!url.isNullOrBlank()) {
+            AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import com.example.pequenossabores.data.repository.SesionPreferences
 import com.example.pequenossabores.ui.components.Tab
 import com.example.pequenossabores.ui.screens.*
+import com.example.pequenossabores.ui.screens.PantallaPequeChefChat
 
 sealed class Ruta(val ruta: String) {
     data object Splash : Ruta("splash")
@@ -20,6 +21,9 @@ sealed class Ruta(val ruta: String) {
     }
     data object Inicio : Ruta("inicio")
     data object Plan : Ruta("plan")
+    data object PequeChef : Ruta("pequechef")
+    data object PequeChefChat : Ruta("pequechef-chat")
+    data object Compras : Ruta("compras")
     data object Receta : Ruta("receta/{id}") {
         fun conId(id: Int) = "receta/$id"
     }
@@ -41,7 +45,7 @@ fun AppNavigation() {
             Tab.INICIO -> Ruta.Inicio.ruta
             Tab.PLAN -> Ruta.Plan.ruta
             Tab.PERFIL -> Ruta.Perfil.conModo(false)
-            Tab.PEQUECHEF -> null // Pendiente de implementar
+            Tab.PEQUECHEF -> Ruta.PequeChef.ruta
         }
 
         if (destino != null) {
@@ -128,6 +132,7 @@ fun AppNavigation() {
             PantallaInicio(
                 onTab = irATab,
                 onVerReceta = { nav.navigate(Ruta.Receta.conId(it)) },
+                onIrACompras = { nav.navigate(Ruta.Compras.ruta) { launchSingleTop = true } },
                 onCerrarSesion = cerrarSesion
             )
         }
@@ -136,29 +141,99 @@ fun AppNavigation() {
             PantallaPlan(
                 onTab = irATab,
                 onVerReceta = { nav.navigate(Ruta.Receta.conId(it)) },
+                onIrACompras = { nav.navigate(Ruta.Compras.ruta) { launchSingleTop = true } },
                 onCerrarSesion = cerrarSesion
             )
         }
 
-        // composable(
-        //    route = Ruta.Receta.ruta,
-        //    arguments = listOf(navArgument("id") { type = NavType.IntType })
-        // ) { entrada ->
-        //    PantallaReceta(
-        //        recetaId = entrada.arguments?.getInt("id") ?: 1,
-        //        onAtras = { nav.popBackStack() },
-        //        onIniciar = { nav.navigate(Ruta.Preparacion.conId(it)) }
-        //    )
-        // }
+        composable(Ruta.PequeChef.ruta) {
+            PantallaPequeChef(
+                onTab = irATab,
+                onAbrirChat = {
+                    nav.navigate(Ruta.PequeChefChat.ruta)
+                },
+                onGenerarReceta = { ingredientes ->
+                    // Aquí conectaremos la generación de recetas.
+                },
+                onAbrirMenuSemanal = {
+                    nav.navigate(Ruta.Plan.ruta) {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Ruta.PequeChefChat.ruta) {
+            PantallaPequeChefChat(
+                onVolver = {
+                    nav.popBackStack()
+                },
+                onInicio = {
+                    nav.navigate(Ruta.Inicio.ruta) {
+                        launchSingleTop = true
+                    }
+                },
+                onPlan = {
+                    nav.navigate(Ruta.Plan.ruta) {
+                        launchSingleTop = true
+                    }
+                },
+                onPerfil = {
+                    nav.navigate(Ruta.Perfil.conModo(false)) {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Ruta.Compras.ruta) {
+            PantallaCompras(
+                onTab = irATab,
+                onCerrarSesion = cerrarSesion
+            )
+        }
+
+        composable(
+            route = Ruta.Receta.ruta,
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.IntType
+                }
+            )
+        ) { entrada ->
+            PantallaReceta(
+                recetaId = entrada.arguments?.getInt("id") ?: 1,
+                onAtras = {
+                    nav.popBackStack()
+                },
+                onIniciar = { id ->
+                    nav.navigate(Ruta.Preparacion.conId(id))
+                },
+                onPreguntar = {
+                    nav.navigate(Ruta.PequeChefChat.ruta)
+                }
+            )
+        }
 
         composable(
             route = Ruta.Preparacion.ruta,
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.IntType
+                }
+            )
         ) { entrada ->
             PantallaPreparacion(
                 recetaId = entrada.arguments?.getInt("id") ?: 1,
-                onAtras = { nav.popBackStack() },
-                onFinalizar = { nav.popBackStack(Ruta.Inicio.ruta, false) }
+                onAtras = {
+                    nav.popBackStack()
+                },
+                onFinalizar = {
+                    nav.popBackStack()
+                },
+                onPreguntar = {
+                    nav.navigate(Ruta.PequeChefChat.ruta)
+                }
             )
         }
     }

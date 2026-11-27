@@ -26,12 +26,15 @@ import com.example.pequenossabores.viewmodel.InicioViewModel
 fun PantallaInicio(
     onTab: (Tab) -> Unit,
     onVerReceta: (Int) -> Unit,
+    onIrACompras: () -> Unit,
     onCerrarSesion: () -> Unit,
     vm: InicioViewModel = viewModel()
 ) {
-    val s = vm.estado
+    val s by vm.estado.collectAsStateWithLifecycle()
     val usuario by vm.usuario.collectAsStateWithLifecycle()
     val peque by vm.peque.collectAsStateWithLifecycle()
+    val recetaRecomendada = vm.recetaRecomendada
+    val cargandoReceta = vm.cargandoReceta
 
     val primerNombre = usuario?.nombre?.substringBefore(" ") ?: "Familia"
     val nombreNino = peque?.nombre ?: "tu peque"
@@ -65,8 +68,6 @@ fun PantallaInicio(
                     .background(Brush.linearGradient(listOf(Color(0xFFFFCB9A), Color(0xFFFFE2C0)))).padding(20.dp)
             ) {
                 Row {
-                    Box(Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(Color.White), contentAlignment = Alignment.Center) { Text("🤖", fontSize = 24.sp) }
-                    Spacer(Modifier.width(12.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("PEQUECHEF SUGIERE", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Marron)
@@ -80,23 +81,117 @@ fun PantallaInicio(
                 }
             }
 
-            // Menú recomendado
-            Card(shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            // Menú recomendado dinámico
+            Card(
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
                 Column(Modifier.padding(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text("✨ Menú recomendado hoy", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3B5BDB),
-                            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(AzulSuave).padding(horizontal = 12.dp, vertical = 6.dp))
-                        Text("● 100% Natural", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46),
-                            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(VerdeClaro).padding(horizontal = 12.dp, vertical = 6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "✨ Menú recomendado hoy",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF3B5BDB),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(AzulSuave)
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
                     }
+
                     Spacer(Modifier.height(12.dp))
-                    FotoPlaceholder("🥞", Modifier.fillMaxWidth().height(180.dp), tamano = 80)
-                    Spacer(Modifier.height(12.dp))
-                    Text(s.menu.titulo, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Navy)
-                    Spacer(Modifier.height(6.dp))
-                    Text("⏱️ ${s.menu.tiempoMin} min   ☺️ ${s.menu.textura}   🔥 ${s.menu.kcal} kcal", fontSize = 12.sp, color = GrisTexto)
-                    Spacer(Modifier.height(14.dp))
-                    BotonNaranja("Ver receta completa") { onVerReceta(1) }
+
+                    when {
+                        cargandoReceta -> {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Naranja)
+                            }
+
+                            Text(
+                                "Buscando una receta para tu peque...",
+                                color = GrisTexto,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        recetaRecomendada != null -> {
+                            val receta = recetaRecomendada
+
+
+                            FotoPlaceholder(
+                                emoji = receta.emoji.ifBlank { "🍽️" },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp),
+                                tamano = 80,
+                                url = receta.imagenUrl
+                            )
+
+                            Spacer(Modifier.height(12.dp))
+
+                            Text(
+                                receta.titulo,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Navy
+                            )
+
+                            Spacer(Modifier.height(6.dp))
+
+
+                            Text(
+                                buildList {
+                                    if (receta.minutos > 0) {
+                                        add("⏱️ ${receta.minutos} min")
+                                    }
+
+                                    if (receta.categoria.isNotBlank()) {
+                                        add("🍽️ ${receta.categoria}")
+                                    }
+
+                                    if (receta.datosCompletos && receta.textura.isNotBlank()) {
+                                        add("☺️ ${receta.textura}")
+                                    }
+
+                                    if (receta.datosCompletos && receta.kcal > 0) {
+                                        add("🔥 ${receta.kcal} kcal")
+                                    }
+                                }.joinToString("   "),
+                                fontSize = 12.sp,
+                                color = GrisTexto
+                            )
+
+                            Spacer(Modifier.height(14.dp))
+
+                            BotonNaranja("Ver receta completa") {
+                                onVerReceta(receta.id)
+                            }
+                        }
+
+                        else -> {
+                            Text(
+                                "No hay recetas disponibles en este momento.",
+                                fontSize = 14.sp,
+                                color = GrisTexto
+                            )
+
+                            Spacer(Modifier.height(12.dp))
+
+                            BotonNaranja("Intentar de nuevo") {
+                                vm.cargarRecetaRecomendada()
+                            }
+                        }
+                    }
                 }
             }
 
@@ -112,20 +207,34 @@ fun PantallaInicio(
                     Modifier.weight(1f).clickable { onTab(Tab.PEQUECHEF) })
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TarjetaAcceso("Lista de compras", "Ingredientes listos", Icons.Filled.ShoppingCart, Color(0xFFFFD58A), Marron, Modifier.weight(1f))
+                TarjetaAcceso("Lista de compras", "Ingredientes listos", Icons.Filled.ShoppingCart, Color(0xFFFFD58A), Marron,
+                    Modifier.weight(1f).clickable { onIrACompras() })
                 TarjetaAcceso("Favoritos", "Platos preferidos", Icons.Filled.Star, VerdeClaro, Color(0xFF065F46), Modifier.weight(1f))
             }
 
             // Consejo
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(Durazno).padding(20.dp)) {
-                Box(Modifier.size(44.dp).clip(CircleShape).background(Ambar), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Lightbulb, null, tint = Color.White)
-                }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("CONSEJO NUTRICIONAL", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Marron)
-                    Text("Poder de absorción de hierro", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF4A2511))
-                    Text("La combinación de vitamina C (como fresas o naranja) con hierro vegetal optimiza su absorción en niños pequeños.", fontSize = 13.sp, color = GrisTexto)
+                    Text(
+                        "CONSEJO NUTRICIONAL",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Marron
+                    )
+
+                    Text(
+                        vm.consejoDelDia.titulo,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF4A2511)
+                    )
+
+                    Text(
+                        vm.consejoDelDia.descripcion,
+                        fontSize = 13.sp,
+                        color = GrisTexto
+                    )
                 }
             }
 
@@ -142,7 +251,15 @@ fun PantallaInicio(
                     }
                     Spacer(Modifier.height(10.dp))
                     val colores = listOf(Naranja, Verde, Ambar)
-                    s.progreso.forEachIndexed { i, g -> BarraProgresoGrupo(g.emoji, g.nombre, g.porcentaje, colores[i % colores.size]) }
+
+                    s.progreso.forEachIndexed { i, g ->
+                        BarraProgresoGrupo(
+                            g.emoji,
+                            g.nombre,
+                            g.porcentaje,
+                            colores[i % colores.size]
+                        )
+                    }
                 }
             }
         }
